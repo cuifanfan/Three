@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<div id="webgl"></div>
+<script type="importmap">
+    {
+		"imports": {
+			"three": "../three/build/three.module.js",
+            "three/addons/": "../three/examples/jsm/"
+		}
+	}
+</script>
+<script type="module">
+    import * as THREE from 'three';
+    import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+    //引入性能监视器stats.js
+    import Stats from 'three/addons/libs/stats.module.js';
+
+    //创建stats对象
+    const stats = new Stats();
+    //stats.domElement:web页面上输出计算结果,一个div元素，
+    document.body.appendChild(stats.domElement);
+    // 1. 创建3D场景对象
+    const scene = new THREE.Scene();
+    // 创建辅助观察坐标系
+    const axesHelper = new THREE.AxesHelper(1000);
+    scene.add(axesHelper);
+    // 环境光:没有特定方向，整体改变场景的光照明暗
+    const ambient = new THREE.AmbientLight(0xffffff, 1);
+    scene.add(ambient);
+
+    // 创建一个长方体几何对象
+    const geometry = new THREE.BoxGeometry(50, 50, 50);
+    // 创建一个材质对象（漫反射）
+    const material = new THREE.MeshLambertMaterial({
+        // color:0x0000ff,   // 设置材质颜色
+        transparent: true, // 开启透明
+        // opacity:0.5       // 设置透明度
+    });
+
+    // 创建10个网格对象，表示一个虚拟的物体
+    const meshs = [];
+    for (let i = 0; i < 10; i++) {
+        for (let j = 0; j < 10; j++) {
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(i * 100, 100, j * 100);
+            // 把网格对象放入3D场景
+            scene.add(mesh);
+            meshs.push(mesh);
+        }
+    }
+
+    // 2. 透视投影相机
+    // 输出画布的尺寸
+    const width = 1800;
+    const height = 900;
+    const camera = new THREE.PerspectiveCamera(50, width / height, 1, 8000);
+    // 相机在three三维坐标系中的位置
+    camera.position.set(292, 223, 185);
+    // camera.position.set(2000, 2000, 2000);
+    // 相机对准mesh的位置观察
+    camera.lookAt(1000, 0, 1000);
+
+    // 3.渲染器
+    // 创建渲染器对象
+    const renderer = new THREE.WebGLRenderer();
+    // 设置输出画布的尺寸
+    renderer.setSize(width, height);
+    renderer.render(scene, camera); // 执行渲染操作 - 咔
+
+
+    // 渲染函数
+    function render() {
+        stats.update(); // 刷新时间
+        renderer.render(scene, camera);
+        meshs.forEach(mesh => {
+            mesh.rotateY(0.01);
+        });
+        requestAnimationFrame(render);
+    }
+
+    render();
+    document.getElementById('webgl').appendChild(renderer.domElement);
+
+    // 设置相机控件轨道控制器OrbitControls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    // controls.target.set(0, 0, 1000);
+    controls.update();//update()函数内会执行camera.lookAt(controls.targe)
+</script>
+</body>
+</html>

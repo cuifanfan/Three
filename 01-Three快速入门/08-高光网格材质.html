@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<div id="webgl"></div>
+<script type="importmap">
+    {
+		"imports": {
+			"three": "../three/build/three.module.js",
+            "three/addons/": "../three/examples/jsm/"
+		}
+	}
+</script>
+<script type="module">
+    import * as THREE from 'three';
+    import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+    //引入性能监视器stats.js
+    import Stats from 'three/addons/libs/stats.module.js';
+
+    //创建stats对象
+    const stats = new Stats();
+    //stats.domElement:web页面上输出计算结果,一个div元素，
+    document.body.appendChild(stats.domElement);
+    // 1. 创建3D场景对象
+    const scene = new THREE.Scene();
+    // 创建辅助观察坐标系
+    const axesHelper = new THREE.AxesHelper(1000);
+    scene.add(axesHelper);
+
+
+    //BoxGeometry：长方体
+    // const geometry = new THREE.BoxGeometry(100, 100, 100);
+    // SphereGeometry：球体
+    const geometry = new THREE.SphereGeometry(100);
+    // // CylinderGeometry：圆柱
+    // const geometry = new THREE.CylinderGeometry(20,20,50);
+    // // PlaneGeometry：矩形平面
+    // const geometry = new THREE.PlaneGeometry(100,50);
+    // // CircleGeometry：圆形平面
+    // const geometry = new THREE.CircleGeometry(50);
+    // // 创建一个长方体几何对象
+    // const geometry = new THREE.BoxGeometry(50, 50, 50);
+    // 创建一个材质对象（高光）
+    const material = new THREE.MeshPhongMaterial({
+        // color:0x0000ff,   // 设置材质颜色
+        transparent: true, // 开启透明
+        opacity:0.5,       // 设置透明度
+        // side: THREE.DoubleSide, //两面可见
+        shininess: 20,
+        specular: 0xe63e31, //高光部分的颜色
+    });
+
+    // 创建网格对象，表示一个虚拟的物体
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(150, 120, 110);
+    const mesh1 = new THREE.Mesh(geometry, material);
+    mesh1.position.set(150, 120, -110);
+    // 把网格对象放入3D场景
+    scene.add(mesh);
+    scene.add(mesh1);
+
+    // 平行光
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    // 设置光源的方向：通过光源position属性和目标指向对象的position属性计算
+    directionalLight.position.set(150, 120, 0);
+    // 方向光指向对象网格模型mesh，可以不设置，默认的位置是0,0,0
+    directionalLight.target = mesh1;
+    scene.add(directionalLight);
+    // DirectionalLightHelper：可视化平行光辅助观察
+    const dirLightHelper = new THREE.DirectionalLightHelper(directionalLight, 10, 0xff0000);
+    scene.add(dirLightHelper);
+
+    // 2. 透视投影相机
+    // 输出画布的尺寸
+    const width = 1800;
+    const height = 900;
+    const camera = new THREE.PerspectiveCamera(50, width / height, 1, 8000);
+    // 相机在three三维坐标系中的位置
+    camera.position.set(300, 300, 300);
+    // camera.position.set(2000, 2000, 2000);
+    // 相机对准mesh的位置观察
+    camera.lookAt(0, 0, 0);
+
+    // 3.渲染器
+    // 创建渲染器对象
+    const renderer = new THREE.WebGLRenderer();
+    // 设置输出画布的尺寸
+    renderer.setSize(width, height);
+    renderer.render(scene, camera); // 执行渲染操作 - 咔
+
+    // 渲染函数
+    function render() {
+        stats.update(); // 刷新时间
+        mesh.rotateY(0.01);
+        renderer.render(scene, camera);
+        requestAnimationFrame(render);
+    }
+
+    // render();
+    document.getElementById('webgl').appendChild(renderer.domElement);
+
+    // 设置相机控件轨道控制器OrbitControls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    // 如果OrbitControls改变了相机参数，重新调用渲染器渲染三维场景
+    controls.addEventListener('change', function () {
+        renderer.render(scene, camera); //执行渲染操作
+    });//监听鼠标、键盘事件
+</script>
+</body>
+</html>
