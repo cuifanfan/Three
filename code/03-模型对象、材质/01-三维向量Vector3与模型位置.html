@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="webgl"></div>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "../three/build/three.module.js",
+              "three/addons/": "../three/examples/jsm/"
+      }
+	  }
+</script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import Stats from 'three/addons/libs/stats.module.js';
+    import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+    // 创建stats对象
+    const stats = new Stats();
+    document.body.appendChild(stats.domElement);
+
+    // 1. 创建3D场景对象
+    const scene = new THREE.Scene();
+    const axesHelper = new THREE.AxesHelper(1000);
+    scene.add(axesHelper);
+    const geometry = new THREE.SphereGeometry(50, 32, 16);
+    const material = new THREE.MeshLambertMaterial({
+      color: 0xff0000,
+      side: THREE.DoubleSide,
+      wireframe: true,
+    });
+
+    // 创建网格模型对象
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+    const ambient = new THREE.AmbientLight(0xffffff, 2.0);
+    scene.add(ambient);
+
+    // 2. 透视投影相机
+    // 输出画布的尺寸
+    const width = 1800;
+    const height = 900;
+    const camera = new THREE.PerspectiveCamera(50, width / height, 1, 2000);
+    camera.position.set(100, 100, 100);
+    camera.lookAt(0, 0, 0);
+
+    // 3.渲染器
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(width, height);
+    renderer.render(scene, camera); // 执行渲染操作 - 咔
+    const gui = new GUI();
+    gui.domElement.style.right = '0px';
+    gui.domElement.style.width = '300px';
+    const pointLightFolder = gui.addFolder('点光源');
+    pointLightFolder.close();
+    const config = { rotateY: true };
+    gui.add(config, 'rotateY').name('Y轴旋转');
+    gui.add(mesh.position, 'x', 0, 180);
+    gui.add(mesh.position, 'y', [0, 60, 180]);
+    gui.add(mesh.position, 'z', 0, 180);
+    // 渲染函数
+    function render() {
+      stats.update(); // 刷新时间
+      if (config.rotateY) mesh.rotateY(0.01);
+      renderer.render(scene, camera);
+      requestAnimationFrame(render);
+    }
+    render();
+    document.getElementById('webgl').appendChild(renderer.domElement);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.addEventListener('change', function () {
+      renderer.render(scene, camera);
+    })
+
+    /**新插入的代码start*/
+    setTimeout(() => {
+      // 设置网格模型y坐标
+      // mesh.position.y = 80;
+      // mesh.position.set(80, 2, 10);
+
+      // 等价于mesh.postion.x = mesh.position.x + 100
+      // mesh.translateX(100);
+      // mesh.translateZ(-50);
+      const axis = new THREE.Vector3(1, 1, 1);
+      axis.normalize(); // 向量归一化
+      // 沿着axis轴平移100
+      mesh.translateOnAxis(axis, 100);
+
+      // x轴缩放
+      mesh.scale.x = 0.5;
+      // mesh.scale.set(1,2,2)
+    }, 1000)
+    /**新插入的代码end*/
+  </script>
+</body>
+
+</html>

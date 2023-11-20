@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="webgl"></div>
+  <script type="importmap">
+    {
+		"imports": {
+			"three": "../three/build/three.module.js",
+            "three/addons/": "../three/examples/jsm/"
+		}
+	}
+</script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    // 引入性能监视器stats.js
+    import Stats from 'three/addons/libs/stats.module.js';
+    // 引入dat.gui.js的一个类GUI
+    import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+    // 创建stats对象
+    const stats = new Stats();
+    // stats.domElement:web页面上输出计算结果,一个div元素，
+    document.body.appendChild(stats.domElement);
+
+    // 1. 创建3D场景对象
+    const scene = new THREE.Scene();
+
+    // 创建辅助观察坐标系
+    const axesHelper = new THREE.AxesHelper(1000);
+    scene.add(axesHelper);
+    //矩形几何体PlaneGeometry的参数3,4表示细分数，默认是1,1
+    // const geometry = new THREE.PlaneGeometry(100, 50, 2, 1); //矩形平面几何体
+    // 参数2、3分别代表宽、高度两个方向上的细分数，默认32,16
+    const geometry = new THREE.SphereGeometry(50, 32, 16);
+    // const geometry = new THREE.BoxGeometry(50,50,50); //长方体
+
+    // 几何体xyz三个方向都放大2倍
+    // geometry.scale(2, 2, 1);
+    // 几何体沿着x轴平移50
+    geometry.translate(50, 0, 0);
+    // 几何体绕着x轴旋转45度
+    // geometry.rotateX(Math.PI / 4);
+    geometry.center();
+    // 几何体旋转、缩放或平移之后，查看几何体顶点位置坐标的变化
+    // BufferGeometry的旋转、缩放、平移等方法本质上就是改变顶点的位置坐标
+    console.log('顶点位置数据', geometry.attributes.position);
+
+
+    const material = new THREE.MeshLambertMaterial({
+      color: 0xff0000,
+      side: THREE.DoubleSide, //两面可见
+      wireframe: true, //线条模式渲染mesh对应的三角形数据
+    });
+
+    // 创建网格模型对象
+    const mesh = new THREE.Mesh(geometry, material);
+
+    // 把网格对象放入3D场景
+    scene.add(mesh);
+
+    //环境光:没有特定方向，整体改变场景的光照明暗
+    const ambient = new THREE.AmbientLight(0xffffff, 2.0);
+    scene.add(ambient);
+
+    // 2. 透视投影相机
+    // 输出画布的尺寸
+    const width = 1800;
+    const height = 900;
+    const camera = new THREE.PerspectiveCamera(50, width / height, 1, 2000);
+    // 相机在three三维坐标系中的位置
+    camera.position.set(300, 300, 300);
+    // 相机对准mesh的位置观察
+    camera.lookAt(0, 0, 0);
+
+    // 3.渲染器
+    // 创建渲染器对象
+    const renderer = new THREE.WebGLRenderer();
+    // 设置输出画布的尺寸
+    renderer.setSize(width, height);
+    renderer.render(scene, camera); // 执行渲染操作 - 咔
+
+    const gui = new GUI();
+    gui.domElement.style.right = '0px';
+    gui.domElement.style.width = '300px';
+
+    const pointLightFolder = gui.addFolder('点光源');
+    pointLightFolder.close();
+    const config = {
+      rotateY: true,
+    }
+    gui.add(config, 'rotateY').name('Y轴旋转');
+    gui.add(mesh.position, 'x', 0, 180);
+    gui.add(mesh.position, 'y', [0, 60, 180]);
+    gui.add(mesh.position, 'z', 0, 180);
+
+    // 渲染函数
+    function render() {
+      stats.update(); // 刷新时间
+      if (config.rotateY) mesh.rotateY(0.01);
+      renderer.render(scene, camera);
+      requestAnimationFrame(render);
+    }
+
+    render();
+    document.getElementById('webgl').appendChild(renderer.domElement);
+
+    // 设置相机控件轨道控制器OrbitControls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    // 如果OrbitControls改变了相机参数，重新调用渲染器渲染三维场景
+    controls.addEventListener('change', function () {
+      renderer.render(scene, camera); //执行渲染操作
+    });//监听鼠标、键盘事件
+  </script>
+</body>
+
+</html>

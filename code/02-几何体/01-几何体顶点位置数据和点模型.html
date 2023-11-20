@@ -99,9 +99,9 @@
     // 创建线模型对象
     // const mesh = new THREE.Line(geometry, material);
     // 闭合线条
-    // const mesh = new THREE.LineLoop(geometry, material); 
-    //非连续的线条
-    const mesh = new THREE.LineSegments(geometry, material);
+    const mesh = new THREE.LineLoop(geometry, material);
+    // 非连续的线条
+    // const mesh = new THREE.LineSegments(geometry, material);
     // 把网格对象放入3D场景
     scene.add(mesh);
 

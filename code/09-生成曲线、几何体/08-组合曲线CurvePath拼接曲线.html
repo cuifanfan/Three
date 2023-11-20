@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+<button id="download">下载</button>
+<div id="webgl"></div>
+<script type="importmap">
+    {
+      "imports": {
+        "three": "../three/build/three.module.js",
+        "three/addons/": "../three/examples/jsm/"
+      }
+    }
+</script>
+<script type="module">
+    import * as THREE from 'three';
+    import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+    // 1. 创建3D场景对象
+    const scene = new THREE.Scene();
+
+    // 辅助坐标系
+    const axesHelper = new THREE.AxesHelper(1000);
+    scene.add(axesHelper);
+
+    const R = 80; // 圆弧半径
+    const H = 200; // 直线部分高度
+    const line1 = new THREE.LineCurve(new THREE.Vector2(R, H), new THREE.Vector2(R, 0));
+    const line2 = new THREE.LineCurve(new THREE.Vector2(-R, H), new THREE.Vector2(-R, 0));
+    const arc = new THREE.ArcCurve(0, 0, R, 0, Math.PI, true);  // 圆弧
+    // 组合为一个曲线对象
+    const curvePath = new THREE.CurvePath();
+    curvePath.curves.push(line1, arc, line2);
+
+    const geometry = new THREE.BufferGeometry(); // 创建一个几何体对象
+    // geometry.setFromPoints(curvePath.getPoints(16));
+    // 等间距方式返回顶点数据
+    geometry.setFromPoints(curvePath.getSpacedPoints(16));
+    const material = new THREE.LineBasicMaterial({
+        color: 0xe13743
+    });
+    const line = new THREE.Line(geometry, material);
+    scene.add(line);
+
+    // 可视化curve.getPoints从曲线上获取的点坐标
+    const material2 = new THREE.PointsMaterial({
+        color: 0xff00ff,
+        size: 10,
+    });
+    //点模型对象
+    const points = new THREE.Points(geometry, material2);
+    scene.add(points)
+
+    // 环境光
+    const ambient = new THREE.AmbientLight(0xffffff, 2.0);
+    scene.add(ambient);
+
+    // 2. 透视投影相机
+    // 输出画布的尺寸
+    const width = window.innerWidth - 200; //canvas画布高度
+    const height = window.innerHeight - 100; //canvas画布宽度
+    const camera = new THREE.PerspectiveCamera(50, width / height, 1, 2000);
+    camera.position.set(100, 100, 100);
+    camera.lookAt(0, 0, 0);
+
+    // 3.渲染器
+    const renderer = new THREE.WebGLRenderer({
+        alpha: true, // 设置背景透明度
+        preserveDrawingBuffer: true, // canvas内容下载到本地
+    });
+    renderer.setSize(width, height);
+
+    // 设置背景透明度
+    // renderer.setClearAlpha(0);
+    renderer.setClearColor(0xb9d3ff, 0.4); //设置背景颜色和透明度
+
+    function render() {
+        requestAnimationFrame(render);
+        renderer.render(scene, camera); // 执行渲染操作 - 咔
+    }
+
+    render();
+
+    document.getElementById('webgl').appendChild(renderer.domElement);
+    // 相机轨道控制器
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.addEventListener('change', function () {
+        renderer.render(scene, camera);
+    });
+
+    window.addEventListener('resize', () => {
+        const width = window.innerWidth - 200; //canvas画布高度
+        const height = window.innerHeight - 100; //canvas画布宽度
+        renderer.setSize(width, height);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix(); // 更新相机矩阵
+    });
+
+    // 下载到本地
+    document.getElementById('download').addEventListener('click', () => {
+        const _a = document.createElement('a');
+        _a.download = 'threejs.png'; // 文件下载名
+        const canvas = renderer.domElement; // 获取canvas是对象
+        _a.href = canvas.toDataURL('image/png');
+        _a.click();
+    });
+</script>
+</body>
+
+</html>

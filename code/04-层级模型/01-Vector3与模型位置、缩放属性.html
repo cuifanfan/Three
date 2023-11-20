@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+<div id="webgl"></div>
+<script type="importmap">
+    {
+      "imports": {
+        "three": "../three/build/three.module.js",
+        "three/addons/": "../three/examples/jsm/"
+      }
+    }
+
+</script>
+<script type="module">
+    import * as THREE from 'three';
+    import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+    import Stats from 'three/addons/libs/stats.module.js';
+    import {GUI} from 'three/addons/libs/lil-gui.module.min.js';
+
+    // 创建stats对象
+    const stats = new Stats();
+    document.body.appendChild(stats.domElement);
+
+    // 1. 创建3D场景对象
+    const scene = new THREE.Scene();
+    const axesHelper = new THREE.AxesHelper(1000);
+    scene.add(axesHelper);
+    const geometry = new THREE.SphereGeometry(50, 32, 16);
+    const material = new THREE.MeshLambertMaterial({
+        color: 0xff0000,
+        side: THREE.DoubleSide,
+        wireframe: true,
+    });
+
+    // 创建网格模型对象
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    // 环境光
+    // const ambient = new THREE.AmbientLight(0xffffff, 2.0);
+    // scene.add(ambient);
+    // 点光源
+    const pointLight = new THREE.PointLight(0xffffff, 2.0);
+    pointLight.position.set(50, 50, 0);
+    scene.add(pointLight);
+    // 点光源辅助观察
+    const pointLightHelper = new THREE.PointLightHelper(pointLight, 10);
+    scene.add(pointLightHelper);
+
+    // 2. 透视投影相机
+    // 输出画布的尺寸
+    const width = 1800;
+    const height = 900;
+    const camera = new THREE.PerspectiveCamera(50, width / height, 1, 2000);
+    camera.position.set(100, 100, 100);
+    camera.lookAt(0, 0, 0);
+
+    // 3.渲染器
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(width, height);
+    renderer.render(scene, camera); // 执行渲染操作 - 咔
+    const gui = new GUI();
+    gui.domElement.style.right = '0px';
+    gui.domElement.style.width = '300px';
+    const pointLightFolder = gui.addFolder('点光源');
+    pointLightFolder.close();
+    const config = {rotateY: true};
+    gui.add(config, 'rotateY').name('Y轴旋转');
+    gui.add(mesh.position, 'x', 0, 180);
+    gui.add(mesh.position, 'y', [0, 60, 180]);
+    gui.add(mesh.position, 'z', 0, 180);
+
+    // 渲染函数
+    function render() {
+        stats.update(); // 刷新时间
+        if (config.rotateY) mesh.rotateY(0.01);
+        renderer.render(scene, camera);
+        requestAnimationFrame(render);
+    }
+
+    render();
+    document.getElementById('webgl').appendChild(renderer.domElement);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.addEventListener('change', function () {
+        renderer.render(scene, camera);
+    });
+
+    /**新插入的代码start*/
+    setTimeout(() => {
+        const mesh2 = mesh.clone();
+        mesh.material.color.set(0xffff00);
+        mesh2.geometry = mesh.geometry.clone();
+        mesh2.material = mesh.material.clone();
+        mesh2.position.x = 100;
+        // scene.add(mesh2);
+
+        const mesh3 = mesh.clone();
+        mesh3.geometry = mesh.geometry.clone();
+        mesh3.material = mesh.material.clone();
+        mesh3.position.z = 100;
+
+        const group = new THREE.Group();
+        group.add(mesh2, mesh3);
+        scene.add(group);
+
+        // mesh2和mesh3跟着平移
+        // group.translateY(100);
+        group.scale.set(0.5, 0.5, 0.5);
+        // Group比Object3D更语义化，某种程度上两者可以划等号
+
+
+        // mesh也能添加mesh子对象， mesh和Group父类都是Object3D
+        const mesh4 = mesh.clone();
+        mesh4.geometry = mesh.geometry;
+        mesh4.material = mesh.material;
+        mesh4.position.y = -100;
+        mesh3.add(mesh4);
+        mesh3.translateY(-100);
+    }, 1000);
+    /**新插入的代码end*/
+</script>
+</body>
+
+</html>

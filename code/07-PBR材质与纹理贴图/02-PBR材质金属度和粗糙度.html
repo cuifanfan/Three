@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+<div id="webgl"></div>
+<script type="importmap">
+    {
+      "imports": {
+        "three": "../three/build/three.module.js",
+        "three/addons/": "../three/examples/jsm/"
+      }
+    }
+</script>
+<script type="module">
+    import * as THREE from 'three';
+    import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+    // 1. 创建3D场景对象
+    const scene = new THREE.Scene();
+
+    // 辅助坐标系
+    const axesHelper = new THREE.AxesHelper(1000);
+    scene.add(axesHelper);
+
+    const geometry = new THREE.SphereGeometry(50, 32, 16);
+    const material = new THREE.MeshStandardMaterial({
+        // 默认0.5，0.0到1.0之间的值可用于生锈的金属外观
+        // metalness: 0.9,
+        color: 0x92ac5a,
+        roughness: 0,//表面粗糙度 0：镜面反射，1：漫反射
+    });
+
+    // 创建网格模型对象
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    // 环境光
+    const ambient = new THREE.AmbientLight(0xffffff, 2.0);
+    scene.add(ambient);
+
+    // 2. 透视投影相机
+    // 输出画布的尺寸
+    const width = 1800;
+    const height = 900;
+    const camera = new THREE.PerspectiveCamera(50, width / height, 1, 2000);
+    camera.position.set(100, 100, 100);
+    camera.lookAt(0, 0, 0);
+
+    // 3.渲染器
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(width, height);
+
+    function render() {
+        mesh.rotateY(0.01);
+        requestAnimationFrame(render);
+        renderer.render(scene, camera); // 执行渲染操作 - 咔
+    }
+
+    render();
+
+    document.getElementById('webgl').appendChild(renderer.domElement);
+    // 相机轨道控制器
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.addEventListener('change', function () {
+        renderer.render(scene, camera);
+    });
+</script>
+</body>
+
+</html>

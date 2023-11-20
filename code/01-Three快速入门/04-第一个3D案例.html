@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+<body>
+    <div id="webgl"></div>
+    <script type="importmap">
+      {
+          "imports": {
+              "three": "../three/build/three.module.js",
+              "three/addons/": "../three/examples/jsm/"
+          }
+      }
+  </script>
+    <script type="module">
+        import * as THREE from 'three';
+
+        // 1. 创建3D场景对象
+        const scene = new THREE.Scene();
+
+        // 创建一个长方体几体何对象
+        const geometry = new THREE.BoxGeometry(100, 100, 100);
+
+        // 创建一个材质对象
+        const material = new THREE.MeshLambertMaterial({
+            color: 0x0000ff,   // 设置材质颜色
+        })
+
+        // 创建网格模型对象，表示一个虚拟物体
+        const mesh = new THREE.Mesh(geometry, material);
+        // 设置模型在三维空间的位置，默认坐标原点
+        mesh.position.set(0, 0, 0);
+        // 把网格对象放入3D场景
+        scene.add(mesh);
+    </script>
+</body>
+
+</html>
