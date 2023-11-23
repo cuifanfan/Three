@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+</html><!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+<button id="download">下载</button>
+<div id="webgl"></div>
+<script type="importmap">
+    {
+      "imports": {
+        "three": "../three/build/three.module.js",
+        "three/addons/": "../three/examples/jsm/"
+      }
+    }
+</script>
+<script type="module">
+    import * as THREE from 'three';
+    const box3 = new THREE.Box3();
+    console.log('box3:', box3);
+    box3.min = new THREE.Vector3(-10, -10, 0);
+    box3.max = new THREE.Vector3(100, 20, 50);
+
+    const geometry = new THREE.BoxGeometry(100, 100, 100);
+    const material = new THREE.MeshLambertMaterial();
+    const mesh = new THREE.Mesh(geometry, material);
+
+    // 计算模型最小包围盒
+    const meshBox3 = new THREE.Box3();
+    meshBox3.expandByObject(mesh);
+    console.log('查看模型包围盒：', meshBox3);
+
+    // 获取包围盒尺寸
+    const scale = new THREE.Vector3();
+    meshBox3.getSize(scale);
+    console.log('包围盒尺寸：', scale);
+
+    // 获取包围盒几何中心
+    const center = new THREE.Vector3();
+    meshBox3.getCenter(center);
+    console.log('包围盒中心：', center);
+</script>
+</body>
+
+</html>
