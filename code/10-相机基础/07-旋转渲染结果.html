@@ -83,8 +83,9 @@
     camera.lookAt(center.x, center.y, 0);
 
     console.log('.up默认值', camera.up);
+    // camera.up.set(1, 0, 0);
     camera.up.set(0, 0, 0);
-    camera.lookAt(0,0,0);//执行lookAt重新计算相机姿态
+    camera.lookAt(0, 0, 0);//执行lookAt重新计算相机姿态
     // 渲染器
     const renderer = new THREE.WebGLRenderer({
         preserveDrawingBuffer: true, // canvas内容下载到本地
