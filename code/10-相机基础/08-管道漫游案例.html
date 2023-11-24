@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+<div id="webgl"></div>
+<script src="https://cdn.bootcss.com/three.js/r83/three.min.js"></script>
+<script type="module">
+    const scene = new THREE.Scene();
+    // 环境光
+    const ambient = new THREE.AmbientLight(0xffffff, 2.0);
+    scene.add(ambient);
+
+    // 正投影相机
+    const width = window.innerWidth; // Canvas画布宽高
+    const height = window.innerHeight;
+    const camera = new THREE.PerspectiveCamera(90, width / height, 1, 3000);
+    camera.position.set(300, 300, 300);
+    // 三维样条曲线
+    const path = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-50, 20, 90),
+        new THREE.Vector3(-10, 40, 40),
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(60, -60, 0),
+        new THREE.Vector3(90, -40, 60),
+        new THREE.Vector3(120, 30, 30),
+    ]);
+    const geometry = new THREE.TubeBufferGeometry(path, 200, 5, 30);
+
+    // 纹理贴图
+    const textLoader = new THREE.TextureLoader();
+    const texture = textLoader.load('./cuifan.jpg');
+    // 纹理U方向阵列
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.repeat.x = 10;
+
+    const material = new THREE.MeshLambertMaterial({
+        map:texture,
+        side: THREE.DoubleSide, //双面显示看到管道内壁
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    // 渲染器
+    const renderer = new THREE.WebGLRenderer({
+        preserveDrawingBuffer: true, // canvas内容下载到本地
+    });
+    renderer.setSize(width, height);
+
+    // 从曲线上等间距获取500个点
+    const pointsArr =  path.getSpacedPoints(500);
+    let i = 0;
+    function render() {
+        if (i >= pointsArr.length - 1) i = 0;
+        renderer.render(scene, camera);
+        camera.position.copy(pointsArr[i]);
+        camera.lookAt(pointsArr[++i]);
+        requestAnimationFrame(render);
+    }
+
+    render();
+    document.getElementById('webgl').appendChild(renderer.domElement);
+
+    window.addEventListener('resize', () => {
+        const width = window.innerWidth; //canvas画布高度
+        const height = window.innerHeight; //canvas画布宽度
+        renderer.setSize(width, height);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix(); // 更新相机矩阵
+    });
+
+    // 下载到本地
+    document.getElementById('download').addEventListener('click', () => {
+        const _a = document.createElement('a');
+        _a.download = 'threejs.png'; // 文件下载名
+        const canvas = renderer.domElement; // 获取canvas是对象
+        _a.href = canvas.toDataURL('image/png');
+        _a.click();
+    });
+</script>
+</body>
+
+</html>
+

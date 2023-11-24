@@ -28,7 +28,7 @@
 </script>
 <script type="module">
     import * as THREE from 'three';
-    import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+    import {OrbitControls,MapControls } from 'three/addons/controls/OrbitControls.js';
     //引入性能监视器stats.js
     import Stats from 'three/addons/libs/stats.module.js';
     // 创建stats对象
@@ -75,16 +75,8 @@
     // 正投影相机
     const width = window.innerWidth; // Canvas画布宽高
     const height = window.innerHeight;
-    const k = width / height; // Canvas 画布宽高比
-    const s = 70; // left、right、top、bottom范围大小 (高)
-    const camera = new THREE.OrthographicCamera(-s * k, s * k, s, -s, 1, 8000);
+    const camera = new THREE.PerspectiveCamera(90, width / height, 1, 3000);
     camera.position.set(300, 300, 300);
-    camera.position.set(center.x, center.y, 300);
-    camera.lookAt(center.x, center.y, 0);
-
-    console.log('.up默认值', camera.up);
-    // camera.up.set(1, 0, 0);
-    camera.up.set(0, 0, 0);
     camera.lookAt(0, 0, 0);//执行lookAt重新计算相机姿态
     // 渲染器
     const renderer = new THREE.WebGLRenderer({
@@ -127,19 +119,42 @@
 
     // 相机轨道控制器
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(center.x, center.y);
-    controls.update();
     controls.addEventListener('change', function () {
         renderer.render(scene, camera);
     });
+    // 缩放（本质是改变相机的position）
+    // controls.enableZoom = false;
+    controls.minDistance = 200;
+    controls.maxDistance = 500;
+    // controls.maxZoom = 2;
+    // controls.minZoom = 0.5;
+    // 鼠标右键拖动
+    controls.enablePan = false;
+    // 旋转
+    // controls.enableRotate = false;
+    controls.target.set(1, 1, 1);
+    //update()函数内会执行camera.lookAt(controls.target)
+    controls.update();
+
+    controls.addEventListener('change',function(){
+        //相机位置与目标观察点距离
+        const dis = controls.getDistance();
+        console.log('dis',dis);
+    })
+
+    // 上下旋转范围
+    controls.minPolarAngle = 0;//默认值0
+    controls.maxPolarAngle = Math.PI / 2;//默认值Math.PI
+
+    // 左右旋转范围
+    controls.minAzimuthAngle = -Math.PI / 2;
+    controls.maxAzimuthAngle = Math.PI / 2;
 
     window.addEventListener('resize', () => {
         const width = window.innerWidth; //canvas画布高度
         const height = window.innerHeight; //canvas画布宽度
         renderer.setSize(width, height);
-        const k = width / height;
-        camera.left = -s * k;
-        camera.right = s * k;
+        camera.aspect = width / height;
         camera.updateProjectionMatrix(); // 更新相机矩阵
     });
 
