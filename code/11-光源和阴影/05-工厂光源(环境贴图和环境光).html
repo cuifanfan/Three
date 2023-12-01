@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+<div id="webgl"></div>
+<button id="download">下载</button>
+<script type="importmap">
+    {
+      "imports": {
+        "three": "../three/build/three.module.js",
+        "three/addons/": "../three/examples/jsm/"
+      }
+    }
+
+</script>
+<script type="module">
+    import * as THREE from 'three';
+    import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+    //引入性能监视器stats.js
+    import Stats from 'three/addons/libs/stats.module.js';
+    // 创建stats对象
+    const stats = new Stats();
+    // stats.domElement:web页面上输出计算结果,一个div元素，
+    document.body.appendChild(stats.domElement);
+
+    // 创建3D场景对象
+    const scene = new THREE.Scene();
+    // 辅助坐标系
+    const axesHelper = new THREE.AxesHelper(1000);
+    scene.add(axesHelper);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    // 设置产生阴影的光源对象,开启光源阴影的计算功能
+    directionalLight.castShadow = true;
+    directionalLight.shadow.camera.left = -450;
+    directionalLight.shadow.camera.right = 300;
+    directionalLight.shadow.camera.top = 300;
+    directionalLight.shadow.camera.bottom = -300;
+    directionalLight.shadow.camera.near = 0.5;
+    directionalLight.shadow.camera.far = 2000;
+
+    console.log('阴影默认像素',directionalLight.shadow.mapSize);
+
+    // 模糊弱化阴影边缘
+    console.log('.shadow.radius',directionalLight.shadow.radius);
+    directionalLight.shadow.radius = 3;
+
+    directionalLight.position.set(600, 600, 600);
+
+    // 可视化平行光阴影对应的正投影相机对象
+    const cameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+    scene.add(cameraHelper);
+    scene.add(directionalLight);
+
+    const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 0xffffff)
+    scene.add(directionalLightHelper);
+
+    const textureLoader = new THREE.TextureLoader();
+    const texture = textureLoader.load('./指南针.jpg');
+    const geometry = new THREE.BoxGeometry(70, 70, 70);
+    const material = new THREE.MeshLambertMaterial({
+        // map: texture
+    });
+
+    for (let i = 0; i < 3; i ++) {
+        for (let j = 0; j < 3; j++) {
+            for (let k = 0; k < 3; k++) {
+                const mesh = new THREE.Mesh(geometry, material);
+                // 设置产生阴影的模型对象
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.position.set(35 + 150 * i, 35 + 150 * k, 150 * j);
+                scene.add(mesh);
+            }
+        }
+    }
+
+    const planeGeometry = new THREE.PlaneGeometry(1500, 1500);
+
+    const planeMaterial = new THREE.MeshLambertMaterial({
+        color:'#0680d7'
+    });
+    const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+    planeMesh.rotateX(-Math.PI / 2);
+    // 设置接收阴影的投影面
+    planeMesh.receiveShadow = true;
+    scene.add(planeMesh);
+
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const camera = new THREE.PerspectiveCamera(90, width / height, 1, 8000);
+    camera.position.set(600, 600, 600);
+    camera.lookAt(0, 0, 0);
+
+    // 渲染器
+    const renderer = new THREE.WebGLRenderer({
+        preserveDrawingBuffer: true, // canvas内容下载到本地
+    });
+    // 允许光源阴影渲染
+    renderer.shadowMap.enabled = true;
+    renderer.setSize(width, height);
+
+    function render() {
+        stats.update(); // 刷新时间
+        renderer.render(scene, camera);
+        requestAnimationFrame(render);
+    }
+
+    render();
+    document.getElementById('webgl').appendChild(renderer.domElement);
+    // 相机控件
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.addEventListener('change', function () {
+        renderer.render(scene, camera);
+    });
+
+    window.addEventListener('resize', () => {
+        const width = window.innerWidth; //canvas画布高度
+        const height = window.innerHeight; //canvas画布宽度
+        renderer.setSize(width, height);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix(); // 更新相机矩阵
+    });
+
+    // 下载到本地
+    document.getElementById('download').addEventListener('click', () => {
+        const _a = document.createElement('a');
+        _a.download = 'threejs.png'; // 文件下载名
+        const canvas = renderer.domElement; // 获取canvas是对象
+        _a.href = canvas.toDataURL('image/png');
+        _a.click();
+    });
+</script>
+</body>
+
+</html>
