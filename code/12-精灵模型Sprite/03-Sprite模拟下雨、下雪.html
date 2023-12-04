@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        * {
+            margin: 0;
+            overflow: hidden;
+        }
+        .tip {
+            position: absolute;
+            left: 50%;
+            top: 10%;
+            transform: translateX(-50%);
+            z-index: 999;
+            color: red;
+            font-size: 60px;
+        }
+        #download {
+            width: 150px;
+            padding: 15px;
+            position: absolute;
+            left: 50%;
+            bottom: 20%;
+            transform: translateX(-50%);
+            z-index: 999;
+            color: #111;
+            font-size: 30px;
+            outline: none;
+            border: 1px solid #00fa7a;
+            background-color: #ffffa0;
+        }
+    </style>
+</head>
+<body>
+<button id="download">下载</button>
+<div class="tip">祝李嘉敏圣诞快乐！</div>
+<div id="webgl"></div>
+<script type="importmap">
+    {
+      "imports": {
+        "three": "../three/build/three.module.js",
+        "three/addons/": "../three/examples/jsm/"
+      }
+    }
+</script>
+<script type="module">
+    import * as THREE from 'three';
+    import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+    // 创建3D场景对象
+    const scene = new THREE.Scene();
+    // 环境光
+    const ambient = new THREE.AmbientLight(0xffffff, 2.0);
+    scene.add(ambient);
+    // 输出画布的尺寸
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    const treeTextture = new THREE.TextureLoader().load('./tree.png');
+    const snowTexture = new THREE.TextureLoader().load('./snow.png');
+    const geometry = new THREE.PlaneGeometry(256, 256);
+    const material = new THREE.MeshLambertMaterial({
+        map: treeTextture
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.rotateY(Math.PI / 4);
+    scene.add(mesh);
+
+    // 创建精灵模型
+    const spriteMaterial = new THREE.SpriteMaterial({
+        map: snowTexture,
+        transparent:true
+    });
+    const group = new THREE.Group();
+    for (let i = 0; i < 15000; i++) {
+        const sprite = new THREE.Sprite(spriteMaterial);
+        sprite.scale.set(5, 5, 1);
+        sprite.position.set(
+            (width) * (Math.random() - 0.5),
+            (height) * Math.random(),
+            (width) * (Math.random() - 0.5)
+        );
+        group.add(sprite);
+    }
+    scene.add(group);
+
+    // 正投影相机
+
+    const cameraHeight = 600;
+    const percentage = width / height;
+    const camera = new THREE.PerspectiveCamera(30, width / height, 1, 3000);
+    camera.position.set(500, 500, 500);
+    camera.lookAt(0, 0, 0);
+    // 渲染器
+    const renderer = new THREE.WebGLRenderer({
+        preserveDrawingBuffer: true, // canvas内容下载到本地
+    });
+    renderer.setSize(width, height);
+
+    const clock = new THREE.Clock();
+    function render() {
+        // 两次渲染时间间隔
+        const gap = clock.getDelta();
+        group.children.forEach(sprite => {
+            sprite.position.y -= 0.5;
+            if (sprite.position.y < 0) sprite.position.y = 600;
+        });
+        renderer.render(scene, camera);
+        requestAnimationFrame(render);
+    }
+
+    render();
+
+    document.getElementById('webgl').appendChild(renderer.domElement);
+    // 相机轨道控制器
+    const controls = new OrbitControls(camera, renderer.domElement);
+    // 本质是改变camera.position
+    controls.addEventListener('change', function () {
+        renderer.render(scene, camera);
+    });
+    window.addEventListener('resize', () => {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        renderer.setSize(width, height);
+        const aspect = width / height;
+        camera.left = -cameraHeight * aspect;
+        camera.right = cameraHeight * aspect;
+        // 更新相机矩阵
+        camera.updateProjectionMatrix();
+    });
+    // 下载到本地
+    document.getElementById('download').addEventListener('click', () => {
+        const _a = document.createElement('a');
+        _a.download = 'threejs.png'; // 文件下载名
+        const canvas = renderer.domElement; // 获取canvas是对象
+        _a.href = canvas.toDataURL('image/png');
+        _a.click();
+    });
+</script>
+</body>
+</html>
