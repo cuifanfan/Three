@@ -15,7 +15,7 @@
             transform: translateX(-50%);
             z-index: 999;
             color: red;
-            font-size: 50px;
+            font-size: 40px;
         }
         #download {
             width: 150px;
@@ -35,7 +35,7 @@
 </head>
 <body>
 <button id="download">下载</button>
-<div class="tip">祝李嘉敏圣诞快乐！</div>
+<div class="tip">崔帆祝你圣诞快乐！</div>
 <div id="webgl"></div>
 <script type="importmap">
     {
@@ -78,7 +78,7 @@
         sprite.scale.set(5, 5, 1);
         sprite.position.set(
             (width) * (Math.random() - 0.5),
-            (height) * Math.random(),
+            (height * 4) * Math.random(),
             (width) * (Math.random() - 0.5)
         );
         group.add(sprite);
@@ -104,7 +104,7 @@
         const gap = clock.getDelta();
         group.children.forEach(sprite => {
             sprite.position.y -= 0.5;
-            if (sprite.position.y < 0) sprite.position.y = 600;
+            if (sprite.position.y < -2 * height) sprite.position.y = 600;
         });
         renderer.render(scene, camera);
         requestAnimationFrame(render);
