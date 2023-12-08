@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<button id="download">下载</button>
+<button id="open">点亮</button>
+<button id="close">熄灭</button>
+<div id="webgl"></div>
+<script type="importmap">
+    {
+      "imports": {
+        "three": "../three/build/three.module.js",
+        "three/addons/": "../three/examples/jsm/"
+      }
+    }
+</script>
+<script type="module">
+    import * as THREE from 'three';
+    import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+    import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+    import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+    import {OutlinePass} from 'three/addons/postprocessing/OutlinePass.js';
+    import {GammaCorrectionShader} from 'three/addons/shaders/GammaCorrectionShader.js';
+    import {ShaderPass} from 'three/addons/postprocessing/ShaderPass.js';
+    import {FXAAShader} from 'three/addons/shaders/FXAAShader.js';
+    import {SMAAPass} from 'three/addons/postprocessing/SMAAPass.js';
+    // 创建3D场景对象
+    const scene = new THREE.Scene();
+    // 辅助坐标系
+    const axesHelper = new THREE.AxesHelper(1000);
+    scene.add(axesHelper);
+
+    // 环境光
+    const ambient = new THREE.AmbientLight(0xffffff, 2.0);
+    scene.add(ambient);
+
+    const geometry = new THREE.BoxGeometry(25, 100, 50);
+    const material = new THREE.MeshLambertMaterial({
+        color: 0xe53f31
+    });
+    geometry.translate(0, 50, 0);
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    // 创建精灵模型
+    const spriteMaterial = new THREE.SpriteMaterial({
+        color: 0x0072fb,
+    });
+    const sprite = new THREE.Sprite(spriteMaterial);
+    sprite.scale.set(10, 10, 1);
+    sprite.position.set(0, 110, 0);
+    scene.add(sprite);
+
+    // 正投影相机
+    // 输出画布的尺寸
+    const width = window.innerWidth - 200;
+    const height = window.innerHeight - 100;
+    const cameraHeight = 600;
+    const percentage = width / height;
+
+    const camera = new THREE.OrthographicCamera(
+        -cameraHeight * percentage,
+        cameraHeight * percentage,
+        cameraHeight,
+        -cameraHeight
+    );
+    camera.position.set(500, 500, 500);
+    camera.lookAt(0, 0, 0);
+    // const cameraHelper = new THREE.CameraHelper(camera);
+    // scene.add(cameraHelper);
+
+    // 渲染器
+    const renderer = new THREE.WebGLRenderer({
+        preserveDrawingBuffer: true, // canvas内容下载到本地
+    });
+    renderer.setSize(width, height);
+    // 设置屏幕像素比，避免canvas画布输出模糊
+    renderer.setPixelRatio(window.devicePixelRatio);
+
+    // 创建后处理对象
+    const composer = new EffectComposer(renderer);
+    // 创建渲染器通道
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+    // 创建伽马校正通道
+    const gammaPass = new ShaderPass(GammaCorrectionShader);
+    composer.addPass(gammaPass);
+
+    // 抗锯齿
+    const pixelRatio = renderer.getPixelRatio(); // 获取设备像素比
+    // 设置FAXX通道（效果差）
+    // const FXAAPass = new ShaderPass(FXAAShader);
+    // FXAAPass.uniforms.resolution.value.x = 1 / (width * pixelRatio);
+    // FXAAPass.uniforms.resolution.value.x = 1 / (height * pixelRatio);
+    // composer.addPass(FXAAPass);
+    // 设置SMAA通道(效果好)
+    const smaaPass = new SMAAPass(width * pixelRatio, height * pixelRatio);
+    composer.addPass(smaaPass);
+
+    const v2 = new THREE.Vector2(width, height);
+    const outlinePass = new OutlinePass(v2, scene, camera);
+    outlinePass.visibleEdgeColor.set(0xffffff); // 描边颜色
+    outlinePass.edgeThickness = 6; // 描边厚度
+    outlinePass.edgeStrength = 6;   // 发光强度
+    composer.addPass(outlinePass);
+    document.getElementById('open').addEventListener('click', () => {
+        outlinePass.selectedObjects = [mesh];
+        console.log(outlinePass);
+    });
+    document.getElementById('close').addEventListener('click', () => {
+        outlinePass.selectedObjects = [];
+    });
+
+    function render() {
+        requestAnimationFrame(render);
+        composer.render();
+        // renderer.render(scene, camera);
+    }
+
+    render();
+    document.getElementById('webgl').appendChild(renderer.domElement);
+    // 相机轨道控制器
+    const controls = new OrbitControls(camera, renderer.domElement);
+    // 本质是改变camera.position
+    controls.addEventListener('change', function () {
+        renderer.render(scene, camera);
+    });
+    window.addEventListener('resize', () => {
+        const width = window.innerWidth - 200;
+        const height = window.innerHeight - 100;
+        renderer.setSize(width, height);
+        const aspect = width / height;
+        camera.left = -cameraHeight * aspect;
+        camera.right = cameraHeight * aspect;
+        // 更新相机矩阵
+        camera.updateProjectionMatrix();
+    });
+    // 下载到本地
+    document.getElementById('download').addEventListener('click', () => {
+        const _a = document.createElement('a');
+        _a.download = 'threejs.png'; // 文件下载名
+        const canvas = renderer.domElement; // 获取canvas是对象
+        _a.href = canvas.toDataURL('image/png');
+        _a.click();
+    });
+</script>
+</body>
+</html>
